@@ -1,0 +1,721 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>환수 관리</title>
+<style>
+:root{
+  --bg:#f5f6fa; --card:#fff; --text:#1f2937; --muted:#6b7280; --line:#e5e7eb;
+  --navy:#1f3864; --blue:#2f5597; --soft:#e8f0fb; --input:#fff8e1; --head:#f1f4fa;
+  --red:#b91c1c; --redbg:#fee2e2; --amber:#92400e; --amberbg:#fef3c7; --green:#166534; --greenbg:#dcfce7; --gray:#4b5563; --graybg:#e5e7eb;
+}
+@media (prefers-color-scheme: dark){
+  :root{ --bg:#111827; --card:#1f2937; --text:#f3f4f6; --muted:#9ca3af; --line:#374151; --navy:#93b4ec; --blue:#6b9bea; --soft:#1e3252; --input:#3a3320; --head:#273244;
+    --red:#fca5a5; --redbg:#4c1d1d; --amber:#fcd34d; --amberbg:#45350f; --green:#86efac; --greenbg:#14391f; --gray:#d1d5db; --graybg:#374151; }
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--text);font:14px/1.5 "Pretendard","Malgun Gothic","Apple SD Gothic Neo","Noto Sans KR",Arial,sans-serif}
+button,input,select,textarea{font:inherit;color:inherit}
+.top{display:flex;align-items:center;gap:12px;padding:10px 20px;background:var(--card);border-bottom:1px solid var(--line)}
+.brand{font-size:18px;font-weight:700;color:var(--navy)}
+.who{margin-left:auto;color:var(--muted);font-size:13px}
+.btn{border:1px solid var(--line);background:var(--card);border-radius:8px;padding:6px 12px;cursor:pointer}
+.btn:hover{background:var(--head)}
+.btn.primary{background:var(--blue);color:#fff;border-color:var(--blue)}
+.btn.primary:hover{opacity:.92}
+.btn.danger{color:var(--red)}
+.btn.small{padding:2px 8px;font-size:12px}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.demo{background:var(--amberbg);color:var(--amber);padding:8px 20px;font-size:13px;border-bottom:1px solid var(--line)}
+.tabs{display:flex;gap:4px;padding:0 20px;background:var(--card);border-bottom:1px solid var(--line);overflow-x:auto}
+.tab{border:0;background:none;padding:12px 16px;cursor:pointer;color:var(--muted);border-bottom:3px solid transparent;white-space:nowrap}
+.tab.active{color:var(--navy);border-bottom-color:var(--blue);font-weight:700}
+main{max-width:1240px;margin:0 auto;padding:20px}
+h2{margin:0 0 12px;font-size:20px;color:var(--navy)}
+h3{margin:22px 0 8px;font-size:15px;color:var(--navy)}
+.hint{color:var(--muted);font-size:13px;margin:4px 0 12px}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin-bottom:16px}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.kpi .l{background:var(--navy);color:#fff;font-size:12px;padding:5px 10px;text-align:center}
+@media (prefers-color-scheme: dark){ .kpi .l{background:var(--blue);color:#fff} }
+.kpi .v{font-size:21px;font-weight:700;text-align:center;padding:10px 6px 4px;background:var(--soft)}
+.kpi .s{font-size:12px;color:var(--muted);text-align:center;padding:3px 6px 8px;background:var(--soft)}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:12px}
+.row label{color:var(--muted);font-size:13px}
+input[type=text],input[type=number],input[type=date],input[type=email],select{border:1px solid var(--line);border-radius:8px;padding:6px 8px;background:var(--card);min-width:0}
+.in{background:var(--input)}
+.tw{overflow-x:auto;background:var(--card);border:1px solid var(--line);border-radius:10px}
+table{border-collapse:collapse;width:100%}
+th{background:var(--head);color:var(--navy);font-size:12.5px;text-align:center;padding:8px 8px;white-space:nowrap;border-bottom:1px solid var(--line);position:sticky;top:0}
+th.sort{cursor:pointer}
+td{padding:7px 8px;border-bottom:1px solid var(--line);text-align:center;vertical-align:middle}
+td.n{text-align:right;font-variant-numeric:tabular-nums}
+td.l{text-align:left}
+tr.click{cursor:pointer}
+tr.click:hover td{background:var(--soft)}
+tr.sel td{background:var(--soft)}
+tr.total td{background:var(--head);font-weight:700}
+.badge{display:inline-block;padding:2px 9px;border-radius:999px;font-size:12px;font-weight:700}
+.b-red{background:var(--redbg);color:var(--red)}
+.b-amber{background:var(--amberbg);color:var(--amber)}
+.b-green{background:var(--greenbg);color:var(--green)}
+.b-gray{background:var(--graybg);color:var(--gray)}
+.old{color:var(--red);font-weight:700}
+.banner{background:var(--amberbg);color:var(--text);border:1px solid var(--line);border-radius:10px;padding:10px 14px;margin:12px 0;font-weight:600;text-align:center}
+.empty{color:var(--muted);text-align:center;padding:26px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px;margin-bottom:14px}
+.drop{border:2px dashed var(--blue);border-radius:12px;padding:30px;text-align:center;background:var(--soft);cursor:pointer}
+.drop.over{background:var(--card)}
+.warn{color:var(--amber);font-size:12.5px;margin:2px 0}
+.err{color:var(--red);font-size:13px;margin:4px 0}
+.login{max-width:380px;margin:12vh auto;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:26px}
+.login h1{margin:0 0 4px;color:var(--navy);font-size:22px}
+.login input{width:100%;margin:6px 0}
+.login .btn{width:100%;margin-top:6px;padding:9px}
+#toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--navy);color:#fff;padding:10px 18px;border-radius:10px;opacity:0;pointer-events:none;transition:opacity .2s;max-width:90vw;z-index:9}
+#toast.show{opacity:1}
+#toast.bad{background:var(--red);color:#fff}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}
+.grid2 label{display:block;font-size:12px;color:var(--muted);margin-bottom:2px}
+.grid2 input,.grid2 select{width:100%}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<div id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+/* =====================================================================
+   설정 — 이 부분만 수정하면 됩니다
+   ===================================================================== */
+const CONFIG = {
+  SUPABASE_URL: "https://kmlbcmyimkgedkovhjkh.supabase.co",        // 예: "https://abcdxyz.supabase.co"   (비워 두면 '미리보기 모드')
+  SUPABASE_ANON_KEY: "sb_publishable_lbbuN5JajDsMeBMgUMiXJw_XdGB-ZsN",   // Supabase > Project Settings > API 의 anon public key
+  LOGIN: { email: true, google: false },   // 로그인 방식. 구글 로그인을 쓰려면 google: true
+  ALLOW_NEW_AUTH_USERS: true,              // 이메일 코드 로그인 시 처음 오는 사람도 계정 생성 허용 (접근은 '관리 > 사용자'에 등록된 사람만 가능)
+  VAT: 0.10,               // 정발행·역발행 합계 계산용 부가세율
+  WITHHOLDING: 0.033,      // 원천세율
+  DEPTS: ["정산담당부서", "환수관리팀", "경영지원팀"],
+  TAX_TYPES: ["정발행", "역발행", "원천세"]
+};
+const KIND_DED = "다음정산 차감", KIND_PAY = "입금확인";
+
+/* ===== PURE LOGIC START (화면과 무관한 계산 부분) ===== */
+const COL = { no: 0, kind: 1, cust: 2, prod: 4, opt: 5, partner: 8, open: 11, amt: 24, settle: 25, note: 27 };
+function pad2(n){ return String(n).padStart(2, "0"); }
+function toISO(v){
+  if (v == null || v === "") return "";
+  if (v instanceof Date) return v.getFullYear() + "-" + pad2(v.getMonth() + 1) + "-" + pad2(v.getDate());
+  if (typeof v === "number" && isFinite(v)){
+    if (v < 30000 || v > 90000) return "";
+    const d = new Date(Date.UTC(1899, 11, 30) + Math.floor(v) * 86400000);
+    return d.getUTCFullYear() + "-" + pad2(d.getUTCMonth() + 1) + "-" + pad2(d.getUTCDate());
+  }
+  const m = String(v).match(/(\d{4})\D+(\d{1,2})\D+(\d{1,2})/);
+  return m ? m[1] + "-" + pad2(+m[2]) + "-" + pad2(+m[3]) : "";
+}
+function stripMarks(s){ return String(s == null ? "" : s).replace(/[■□▪▫●○◎◆◇▲△]/g, "").trim(); }
+function maskName(n){
+  const s = String(n == null ? "" : n).trim();
+  if (!s) return "";
+  const ch = Array.from(s);
+  return ch.length === 1 ? s : ch[0] + "○○";
+}
+function cleanNote(n){
+  return String(n == null ? "" : n).replace(/0\d{1,2}[-\s]?\d{3,4}[-\s]?\d{4}/g, "[번호]").trim();
+}
+function parseNote(note, settleISO){
+  const t = String(note == null ? "" : note);
+  const y0 = settleISO ? +settleISO.slice(0, 4) : new Date().getFullYear();
+  const validDate = (yy, mm, dd) => {
+    const y = 2000 + yy;
+    if (mm < 1 || mm > 12 || dd < 1 || dd > 31) return "";
+    const d = new Date(Date.UTC(y, mm - 1, dd));
+    if (d.getUTCMonth() !== mm - 1) return "";
+    if (y > y0 + 1 || y < y0 - 3) return "";
+    return y + "-" + pad2(mm) + "-" + pad2(dd);
+  };
+  let term = "", rate = null;
+  let m = t.match(/(?:^|\D)(\d{2})(\d{2})(\d{2})(?!\d)\s*해지/);
+  if (m) term = validDate(+m[1], +m[2], +m[3]);
+  if (!term){
+    const re = /(?:^|\D)(\d{2})(\d{2})(\d{2})(?!\d)/g; let k;
+    while ((k = re.exec(t))){ const v = validDate(+k[1], +k[2], +k[3]); if (v){ term = v; break; } }
+  }
+  const r = t.match(/(\d{1,3}(?:\.\d+)?)\s*%/);
+  if (r){ const x = parseFloat(r[1]); if (x >= 0 && x <= 100) rate = x; }
+  return { term, rate };
+}
+/* 정산내역서(엑셀)에서 읽은 행 배열 -> 정산서별 요약 + 환수 건 목록. 고객명은 마스킹, 회선번호 등은 아예 읽지 않음 */
+function extractFromRows(rows, fileName){
+  let hdrOK = false;
+  for (let i = 0; i < Math.min(rows.length, 4); i++){
+    const r = rows[i] || [];
+    if (String(r[COL.amt] == null ? "" : r[COL.amt]).includes("정산금액") && String(r[COL.settle] == null ? "" : r[COL.settle]).includes("정산예정")){ hdrOK = true; break; }
+  }
+  if (!hdrOK) throw new Error("정산내역서 양식이 아닙니다. (정산금액·정산예정일 열 위치가 다릅니다)");
+  const tm = String(fileName || "").match(/(정발행|역발행|원천세)/);
+  const fileTax = tm ? tm[1] : "";
+  const groups = new Map(); const skipped = [];
+  for (const r of rows){
+    if (!r) continue;
+    const kind = String(r[COL.kind] == null ? "" : r[COL.kind]).trim();
+    if (kind !== "일반" && kind !== "환수") continue;
+    const partner = stripMarks(r[COL.partner]);
+    const settle = toISO(r[COL.settle]);
+    const amt = r[COL.amt] == null || r[COL.amt] === "" ? 0 : Number(r[COL.amt]);
+    if (!partner || !settle || !isFinite(amt)){ skipped.push("번호 " + (r[COL.no] == null ? "?" : r[COL.no]) + ": 업체·정산예정일·정산금액 중 빈 값이 있어 제외했습니다."); continue; }
+    const key = partner + "|" + settle;
+    if (!groups.has(key)) groups.set(key, { partner, settleDate: settle, taxType: fileTax, normalSum: 0, normalCount: 0, clawSum: 0, lines: [], warnings: [] });
+    const g = groups.get(key);
+    if (kind === "일반"){ g.normalSum += amt; g.normalCount++; continue; }
+    if (amt > 0) g.warnings.push("번호 " + r[COL.no] + ": 환수 건인데 정산금액이 양수입니다. 확인해 주세요.");
+    const note = cleanNote(r[COL.note]);
+    const pn = parseNote(note, settle);
+    if (!pn.term) g.warnings.push("번호 " + r[COL.no] + ": 비고에서 해지일을 찾지 못했습니다. 아래에서 직접 입력하세요.");
+    if (pn.rate == null) g.warnings.push("번호 " + r[COL.no] + ": 비고에서 환수율을 찾지 못했습니다. 아래에서 직접 입력하세요.");
+    g.clawSum += -amt;
+    g.lines.push({
+      src_no: Number(r[COL.no]) || null,
+      customer_mask: maskName(r[COL.cust]),
+      product: [r[COL.prod], r[COL.opt]].filter(x => x != null && String(x).trim() !== "").map(x => String(x).trim()).join(" / "),
+      open_date: toISO(r[COL.open]),
+      term_date: pn.term,
+      rate_pct: pn.rate,
+      amount: -amt,
+      note
+    });
+  }
+  const list = Array.from(groups.values());
+  if (!list.length) throw new Error("'일반' 또는 '환수' 행을 찾지 못했습니다.");
+  list.forEach(g => { g.warnings = skipped.concat(g.warnings); });
+  return list;
+}
+function daysBetween(fromISO, toISOv){
+  const a = Date.UTC(+fromISO.slice(0, 4), +fromISO.slice(5, 7) - 1, +fromISO.slice(8, 10));
+  const b = Date.UTC(+toISOv.slice(0, 4), +toISOv.slice(5, 7) - 1, +toISOv.slice(8, 10));
+  return Math.round((b - a) / 86400000);
+}
+function statusOf(carry, ded, pay){
+  if (carry === 0) return "상계완료";
+  const done = ded + pay;
+  if (done > carry) return "초과처리 확인";
+  if (carry - done === 0) return "회수완료";
+  if (done > 0) return "일부회수";
+  return "이월중";
+}
+function taxFactor(type, cfg){ return type === "원천세" ? 1 - cfg.WITHHOLDING : 1 + cfg.VAT; }
+function computeRows(statements, lines, actions, todayISO){
+  const lmap = new Map(), amap = new Map();
+  lines.forEach(l => { if (!lmap.has(l.statement_id)) lmap.set(l.statement_id, []); lmap.get(l.statement_id).push(l); });
+  actions.forEach(a => { const k = a.partner + "|" + a.settle_date; if (!amap.has(k)) amap.set(k, []); amap.get(k).push(a); });
+  return statements.map(s => {
+    const acts = amap.get(s.partner + "|" + s.settle_date) || [];
+    const ded = acts.filter(a => a.kind === KIND_DED).reduce((t, a) => t + Number(a.amount), 0);
+    const pay = acts.filter(a => a.kind === KIND_PAY).reduce((t, a) => t + Number(a.amount), 0);
+    const claw = Number(s.claw_sum), normal = Number(s.normal_sum);
+    const carry = Math.max(0, claw - normal);
+    const unresolved = Math.max(0, carry - ded - pay);
+    return Object.assign({}, s, {
+      claw_sum: claw, normal_sum: normal, carry, ded, pay, unresolved,
+      status: statusOf(carry, ded, pay),
+      age: unresolved > 0 ? daysBetween(s.settle_date, todayISO) : null,
+      lines: (lmap.get(s.id) || []).slice().sort((a, b) => (a.src_no || 0) - (b.src_no || 0))
+    });
+  });
+}
+/* ===== PURE LOGIC END ===== */
+
+/* =====================================================================
+   화면 · 저장소
+   ===================================================================== */
+const S = { mode: "demo", sb: null, uid: null, user: null, role: null, member: null, channel: null,
+  statements: [], lines: [], actions: [], members: [], rows: [],
+  tab: "overview", sel: { partner: "", date: "" }, staged: [], sort: { key: "settle_date", dir: -1 },
+  f: { q: "", status: "", open: false, lp: "", lk: "" }, aging: 30, dirty: false };
+try { S.aging = Number(localStorage.getItem("agingDays")) || 30; } catch (e) {}
+let API = null;
+
+const $ = s => document.querySelector(s);
+const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const fmt = n => (n == null || n === "") ? "" : Number(n).toLocaleString("ko-KR");
+const mny = n => n ? fmt(n) : "-";
+const won = n => fmt(n) + "원";
+const todayISO = () => { const d = new Date(); return d.getFullYear() + "-" + pad2(d.getMonth() + 1) + "-" + pad2(d.getDate()); };
+function toast(msg, bad){
+  const t = $("#toast"); if (!t) return;
+  t.textContent = msg; t.className = "show" + (bad ? " bad" : "");
+  clearTimeout(toast._t); toast._t = setTimeout(() => { t.className = ""; }, bad ? 6000 : 3200);
+}
+const can = { upload: () => S.role === "admin", action: () => S.role === "admin" || S.role === "editor", manage: () => S.role === "admin" };
+function badge(st){
+  const c = { "이월중": "b-red", "일부회수": "b-amber", "초과처리 확인": "b-amber", "회수완료": "b-green", "상계완료": "b-green" }[st] || "b-gray";
+  return '<span class="badge ' + c + '">' + esc(st) + "</span>";
+}
+
+/* ---------- 저장소: 미리보기(메모리) ---------- */
+function makeDemoAPI(){
+  let sid = 100, lid = 1000, aid = 5000;
+  const st = [], ln = [], ac = [], mem = [{ email: "demo@example.com", name: "미리보기", dept: "정산담당부서", role: "admin" }];
+  function addStmt(partner, date, tax, normal, lines){
+    const id = ++sid; const claw = lines.reduce((t, l) => t + l.amount, 0);
+    st.push({ id, partner, settle_date: date, tax_type: tax, normal_sum: normal, claw_sum: claw, line_count: lines.length });
+    lines.forEach((l, i) => ln.push(Object.assign({ id: ++lid, statement_id: id, src_no: i + 1 }, l)));
+  }
+  addStmt("A업체", "2026-10-09", "정발행", 0, [
+    { customer_mask: "김○○", product: "인터넷 / 베이직(500M)", open_date: "2026-05-04", term_date: "2026-08-26", rate_pct: 100, amount: 300000, note: "260826해지 / 100%환수" },
+    { customer_mask: "이○○", product: "인터넷 / 라이트(100M)", open_date: "2026-05-11", term_date: "2026-08-10", rate_pct: 100, amount: 300000, note: "260810해지 / 100%환수" }]);
+  addStmt("B업체", "2026-08-28", "원천세", 250000, [
+    { customer_mask: "박○○", product: "TV / TV베이직", open_date: "2026-01-29", term_date: "2026-08-20", rate_pct: 60, amount: 320000, note: "260820 해지 / 실사용6개월21일/60%환수" },
+    { customer_mask: "박○○", product: "인터넷 / 베이직(500M)", open_date: "2026-01-29", term_date: "2026-08-20", rate_pct: 60, amount: 200000, note: "260820 해지 / 실사용6개월21일/60%환수" }]);
+  addStmt("C업체", "2026-10-09", "역발행", 400000, [
+    { customer_mask: "최○○", product: "모바일 / 5G 요금제", open_date: "2026-07-01", term_date: "2026-09-15", rate_pct: 100, amount: 150000, note: "260915해지 / 100%환수" }]);
+  ac.push({ id: ++aid, partner: "B업체", settle_date: "2026-08-28", kind: KIND_DED, amount: 100000, action_date: "2026-09-30", dept: "정산담당부서", memo: "9월 정산에서 차감", created_by: "demo@example.com" });
+  return {
+    async load(){ return { statements: st.slice(), lines: ln.slice(), actions: ac.slice(), members: mem.slice() }; },
+    async saveStatement(stmt, lines, overwrite){
+      const ex = st.find(s => s.partner === stmt.partner && s.settle_date === stmt.settle_date);
+      if (ex && !overwrite) throw new Error("이미 등록된 정산서입니다.");
+      let id;
+      if (ex){ Object.assign(ex, stmt); id = ex.id; for (let i = ln.length - 1; i >= 0; i--) if (ln[i].statement_id === id) ln.splice(i, 1); }
+      else { id = ++sid; st.push(Object.assign({ id }, stmt)); }
+      lines.forEach(l => ln.push(Object.assign({ id: ++lid, statement_id: id }, l)));
+      return id;
+    },
+    async deleteStatement(id){
+      const s = st.find(x => x.id === id);
+      if (ac.some(a => a.partner === s.partner && a.settle_date === s.settle_date)) throw new Error("처리기록이 있어 삭제할 수 없습니다. 먼저 처리기록을 삭제하세요.");
+      st.splice(st.indexOf(s), 1);
+      for (let i = ln.length - 1; i >= 0; i--) if (ln[i].statement_id === id) ln.splice(i, 1);
+    },
+    async addAction(a){ ac.push(Object.assign({ id: ++aid, created_by: S.user.email }, a)); },
+    async deleteAction(id){ const i = ac.findIndex(a => a.id === id); if (i >= 0) ac.splice(i, 1); },
+    async addMember(m){ mem.push(m); },
+    async removeMember(email){ const i = mem.findIndex(x => x.email === email); if (i >= 0) mem.splice(i, 1); }
+  };
+}
+
+/* ---------- 저장소: Supabase ---------- */
+async function fetchAll(table, orderCol){
+  let all = [], from = 0; const size = 1000;
+  for (;;){
+    const { data, error } = await S.sb.from(table).select("*").order(orderCol || "id", { ascending: true }).range(from, from + size - 1);
+    if (error) throw error;
+    all = all.concat(data || []);
+    if (!data || data.length < size) break;
+    from += size;
+  }
+  return all;
+}
+function makeLiveAPI(){
+  return {
+    async load(){
+      const [statements, lines, actions] = await Promise.all([fetchAll("statements"), fetchAll("clawback_lines"), fetchAll("actions")]);
+      const members = S.role === "admin" ? await fetchAll("members", "email") : [];
+      return { statements, lines, actions, members };
+    },
+    async saveStatement(stmt, lines, overwrite){
+      const { data, error } = await S.sb.rpc("save_statement", { p_stmt: stmt, p_lines: lines, p_overwrite: !!overwrite });
+      if (error){ if ((error.message || "").includes("ALREADY_EXISTS")) throw new Error("이미 등록된 정산서입니다."); throw new Error(error.message); }
+      return data;
+    },
+    async deleteStatement(id){
+      const { data, error } = await S.sb.from("statements").delete().eq("id", id).select();
+      if (error){ if (error.code === "23503") throw new Error("처리기록이 있어 삭제할 수 없습니다. 먼저 처리기록을 삭제하세요."); throw new Error(error.message); }
+      if (!data || !data.length) throw new Error("삭제되지 않았습니다. 권한이 없거나 이미 삭제된 정산서입니다.");
+    },
+    async addAction(a){ const { error } = await S.sb.from("actions").insert(a); if (error) throw new Error(error.message); },
+    async deleteAction(id){
+      const { data, error } = await S.sb.from("actions").delete().eq("id", id).select();
+      if (error) throw new Error(error.message);
+      if (!data || !data.length) throw new Error("삭제되지 않았습니다. 권한이 없거나 이미 삭제된 기록입니다.");
+    },
+    async addMember(m){ const { error } = await S.sb.from("members").insert(m); if (error) throw new Error(error.message); },
+    async removeMember(email){
+      const { data, error } = await S.sb.from("members").delete().eq("email", email).select();
+      if (error) throw new Error(error.message);
+      if (!data || !data.length) throw new Error("삭제되지 않았습니다. 권한을 확인하세요.");
+    }
+  };
+}
+async function reload(){
+  const d = await API.load();
+  S.statements = d.statements; S.lines = d.lines; S.actions = d.actions; S.members = d.members;
+  S.rows = computeRows(S.statements, S.lines, S.actions, todayISO());
+}
+function scheduleReload(){
+  clearTimeout(scheduleReload.t);
+  scheduleReload.t = setTimeout(async () => { try { await reload(); safeRender(); } catch (e) { console.error(e); } }, 700);
+}
+function safeRender(){
+  const a = document.activeElement;
+  if (a && /^(INPUT|SELECT|TEXTAREA)$/.test(a.tagName) && $("#content") && $("#content").contains(a)){ S.dirty = true; return; }
+  S.dirty = false; renderTab();
+}
+
+/* ---------- 시작 ---------- */
+async function boot(){
+  const live = CONFIG.SUPABASE_URL && CONFIG.SUPABASE_ANON_KEY;
+  if (!live){
+    S.mode = "demo"; API = makeDemoAPI(); S.user = { email: "demo@example.com" }; S.role = "admin";
+    await reload(); renderApp(); return;
+  }
+  if (!window.supabase){ $("#root").innerHTML = '<div class="login"><h1>연결 오류</h1><p class="err">Supabase 라이브러리를 불러오지 못했습니다. 인터넷 연결 또는 회사 보안 설정을 확인하세요.</p></div>'; return; }
+  S.mode = "live"; API = makeLiveAPI();
+  S.sb = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY, { auth: { persistSession: true, detectSessionInUrl: true } });
+  const { data } = await S.sb.auth.getSession();
+  await afterSession(data.session);
+  S.sb.auth.onAuthStateChange((ev, sess) => { const uid = sess && sess.user ? sess.user.id : null; if (uid !== S.uid) afterSession(sess); });
+  document.addEventListener("visibilitychange", () => { if (!document.hidden && S.role) scheduleReload(); });
+}
+async function afterSession(session){
+  S.uid = session && session.user ? session.user.id : null;
+  if (!session){ S.user = null; S.role = null; renderLogin(); return; }
+  S.user = session.user;
+  const { data, error } = await S.sb.from("members").select("*").eq("email", String(session.user.email || "").toLowerCase()).maybeSingle();
+  if (error || !data){ renderDenied(); return; }
+  S.role = data.role; S.member = data;
+  try { await reload(); } catch (e) { $("#root").innerHTML = '<div class="login"><h1>데이터 오류</h1><p class="err">' + esc(e.message) + '</p></div>'; return; }
+  subscribeRealtime(); renderApp();
+}
+function subscribeRealtime(){
+  if (S.channel) return;
+  try {
+    S.channel = S.sb.channel("db-changes");
+    ["statements", "clawback_lines", "actions", "members"].forEach(t => S.channel.on("postgres_changes", { event: "*", schema: "public", table: t }, scheduleReload));
+    S.channel.subscribe();
+  } catch (e) { console.warn("실시간 연결 실패", e); }
+}
+
+/* ---------- 로그인 ---------- */
+function renderLogin(step, email, msg){
+  let h = '<div class="login"><h1>환수 관리</h1><p class="hint">허용된 사용자만 접근할 수 있습니다.</p>';
+  if (CONFIG.LOGIN.google) h += '<button class="btn primary" data-act="google">Google 계정으로 로그인</button>';
+  if (CONFIG.LOGIN.email){
+    if (step === "code"){
+      h += '<p class="hint">' + esc(email) + ' 로 보낸 인증코드를 입력하세요.</p><input type="text" id="lcode" inputmode="numeric" autocomplete="one-time-code" placeholder="인증코드"><button class="btn primary" data-act="verify" data-email="' + esc(email) + '">확인</button>';
+    } else {
+      h += '<input type="email" id="lemail" placeholder="회사 이메일" autocomplete="email" value="' + esc(email || "") + '"><button class="btn primary" data-act="sendcode">인증코드 받기</button>';
+    }
+  }
+  if (msg) h += '<p class="err">' + esc(msg) + '</p>';
+  $("#root").innerHTML = h + "</div>";
+  bindLogin();
+}
+function bindLogin(){
+  const root = $("#root");
+  root.onclick = async e => {
+    const b = e.target.closest("[data-act]"); if (!b) return;
+    const act = b.dataset.act;
+    try {
+      if (act === "google"){
+        const { error } = await S.sb.auth.signInWithOAuth({ provider: "google", options: { redirectTo: location.origin + location.pathname } });
+        if (error) throw error;
+      } else if (act === "sendcode"){
+        const email = ($("#lemail").value || "").trim().toLowerCase(); if (!email) return;
+        b.disabled = true;
+        const { error } = await S.sb.auth.signInWithOtp({ email, options: { shouldCreateUser: CONFIG.ALLOW_NEW_AUTH_USERS } });
+        if (error){ renderLogin("email", email, "코드를 보내지 못했습니다: " + error.message); return; }
+        renderLogin("code", email);
+      } else if (act === "verify"){
+        const token = ($("#lcode").value || "").trim(); if (!token) return;
+        b.disabled = true;
+        const { error } = await S.sb.auth.verifyOtp({ email: b.dataset.email, token, type: "email" });
+        if (error) renderLogin("code", b.dataset.email, "코드가 맞지 않거나 만료되었습니다.");
+      }
+    } catch (err) { renderLogin("email", "", err.message); }
+  };
+}
+function renderDenied(){
+  const em = S.user && S.user.email ? S.user.email : "";
+  $("#root").innerHTML = '<div class="login"><h1>접근 권한이 없습니다</h1><p class="hint">' + esc(em) + ' 계정은 아직 사용자로 등록되지 않았습니다. 정산 담당자에게 등록을 요청하세요.</p><button class="btn" data-act="logout">로그아웃</button></div>';
+  $("#root").onclick = e => { if (e.target.closest('[data-act="logout"]')) S.sb.auth.signOut(); };
+}
+
+/* ---------- 공통 화면 ---------- */
+const TABS = [["overview", "전체현황"], ["view", "업체조회"], ["upload", "정산서 등록", "upload"], ["log", "처리기록"], ["admin", "관리", "manage"]];
+function renderApp(){
+  const tabs = TABS.filter(t => !t[2] || can[t[2]]()).map(t => '<button class="tab' + (S.tab === t[0] ? " active" : "") + '" data-tab="' + t[0] + '">' + t[1] + "</button>").join("");
+  const roleName = { admin: "관리자", editor: "처리 담당", viewer: "열람" }[S.role] || "";
+  $("#root").innerHTML =
+    '<header class="top"><span class="brand">환수 관리</span><span class="who">' + esc(S.user.email) + " · " + roleName + '</span>' +
+    (S.mode === "live" ? '<button class="btn small" data-act="logout">로그아웃</button>' : "") + "</header>" +
+    (S.mode === "demo" ? '<div class="demo">미리보기 모드입니다. 데이터는 이 화면에만 있고 새로고침하면 사라집니다. (Supabase 연결 전 연습용 · 예시 데이터는 모두 가상입니다)</div>' : "") +
+    '<nav class="tabs">' + tabs + '</nav><main id="content"></main>';
+  const root = $("#root");
+  root.onclick = onClick; root.onchange = onChange; root.oninput = onInput;
+  renderTab();
+}
+function renderTab(){
+  if (!$("#content")) return;
+  document.querySelectorAll(".tab").forEach(b => b.classList.toggle("active", b.dataset.tab === S.tab));
+  const fn = { overview: renderOverview, view: renderView, upload: renderUpload, log: renderLog, admin: renderAdmin }[S.tab];
+  $("#content").innerHTML = fn();
+  if (S.tab === "upload") bindDrop();
+}
+
+/* ---------- 전체현황 ---------- */
+function filteredRows(){
+  const q = S.f.q.trim().toLowerCase();
+  let r = S.rows.filter(x => (!q || x.partner.toLowerCase().includes(q)) && (!S.f.status || x.status === S.f.status) && (!S.f.open || x.unresolved > 0));
+  const { key, dir } = S.sort;
+  r.sort((a, b) => { const x = a[key], y = b[key]; const c = (x == null ? -1 : x) > (y == null ? -1 : y) ? 1 : (x == null ? -1 : x) < (y == null ? -1 : y) ? -1 : 0; return c * dir || a.partner.localeCompare(b.partner); });
+  return r;
+}
+function overviewTable(){
+  const rows = filteredRows();
+  const heads = [["settle_date", "정산일(환수발생일)"], ["partner", "업체"], ["tax_type", "세무"], ["line_count", "환수건수"], ["claw_sum", "환수금"], ["normal_sum", "일반정산금"], ["carry", "이월잔액"], ["ded", "차감 반영"], ["pay", "입금 확인"], ["unresolved", "미해결 잔액"], ["status", "상태"], ["age", "경과일"]];
+  if (!rows.length) return '<div class="tw"><div class="empty">표시할 환수 정산서가 없습니다.</div></div>';
+  let h = '<div class="tw"><table><thead><tr>' + heads.map(x => '<th class="sort" data-sort="' + x[0] + '">' + x[1] + (S.sort.key === x[0] ? (S.sort.dir > 0 ? " ▲" : " ▼") : "") + "</th>").join("") + "</tr></thead><tbody>";
+  rows.forEach(r => {
+    const old = r.age != null && r.age >= S.aging;
+    h += '<tr class="click" data-act="open" data-p="' + esc(r.partner) + '" data-d="' + r.settle_date + '"><td>' + r.settle_date + '</td><td class="l"><b>' + esc(r.partner) + "</b></td><td>" + esc(r.tax_type) + "</td><td>" + r.line_count + '건</td><td class="n">' + mny(r.claw_sum) + '</td><td class="n">' + mny(r.normal_sum) + '</td><td class="n">' + mny(r.carry) + '</td><td class="n">' + mny(r.ded) + '</td><td class="n">' + mny(r.pay) + '</td><td class="n"><b>' + mny(r.unresolved) + "</b></td><td>" + badge(r.status) + '</td><td class="' + (old ? "old" : "") + '">' + (r.age == null ? "" : r.age + "일") + "</td></tr>";
+  });
+  return h + "</tbody></table></div>";
+}
+function renderOverview(){
+  const rows = S.rows, open = rows.filter(r => r.unresolved > 0);
+  const latest = rows.reduce((m, r) => r.settle_date > m ? r.settle_date : m, "");
+  const latestSum = rows.filter(r => r.settle_date === latest).reduce((t, r) => t + r.claw_sum, 0);
+  const aged = open.filter(r => r.age >= S.aging).length;
+  const kp = (l, v, s) => '<div class="kpi"><div class="l">' + l + '</div><div class="v">' + v + '</div><div class="s">' + (s || "&nbsp;") + "</div></div>";
+  const sts = ["이월중", "일부회수", "초과처리 확인", "회수완료", "상계완료"];
+  return "<h2>전체 환수 현황</h2>" +
+    '<div class="kpis">' + kp("환수 정산서", rows.length + "건") + kp("미해결 정산서", open.length + "건") + kp("미해결 잔액 합계", won(open.reduce((t, r) => t + r.unresolved, 0))) +
+    kp("최근 정산일 환수금", won(latestSum), latest) + kp("장기 미해결", aged + "건", S.aging + "일 이상") + "</div>" +
+    '<div class="row"><input type="text" id="fq" placeholder="업체 검색" value="' + esc(S.f.q) + '"><select id="fst"><option value="">상태 전체</option>' + sts.map(s => '<option' + (S.f.status === s ? " selected" : "") + ">" + s + "</option>").join("") + '</select>' +
+    '<label><input type="checkbox" id="fop"' + (S.f.open ? " checked" : "") + '> 미해결만</label><label>장기 기준 <input type="number" id="fag" class="in" min="1" style="width:70px" value="' + S.aging + '"> 일</label></div>' +
+    '<div id="ovTable">' + overviewTable() + '</div><p class="hint">행을 누르면 업체조회로 이동합니다. 상태 기준: 환수금 − 일반정산금 = 이월잔액, 이월잔액 − 차감 − 입금 = 미해결 잔액.</p>';
+}
+
+/* ---------- 업체조회 ---------- */
+function renderView(){
+  const partners = Array.from(new Set(S.rows.map(r => r.partner))).sort((a, b) => a.localeCompare(b));
+  if (!partners.length) return '<h2>업체조회</h2><div class="tw"><div class="empty">등록된 환수 정산서가 없습니다.' + (can.upload() ? " '정산서 등록'에서 정산내역서를 올려 주세요." : "") + "</div></div>";
+  if (!partners.includes(S.sel.partner)){
+    const firstOpen = S.rows.filter(r => r.unresolved > 0).sort((a, b) => a.settle_date < b.settle_date ? 1 : -1)[0];
+    S.sel.partner = firstOpen ? firstOpen.partner : partners[0]; S.sel.date = "";
+  }
+  const mine = S.rows.filter(r => r.partner === S.sel.partner).sort((a, b) => a.settle_date < b.settle_date ? 1 : -1);
+  if (!mine.some(r => r.settle_date === S.sel.date)) S.sel.date = mine[0].settle_date;
+  const cur = mine.find(r => r.settle_date === S.sel.date);
+  const total = mine.reduce((t, r) => t + r.unresolved, 0);
+  const handled = cur.ded + cur.pay;
+  const kp = (l, v, s) => '<div class="kpi"><div class="l">' + l + '</div><div class="v">' + v + '</div><div class="s">' + (s || "&nbsp;") + "</div></div>";
+  const taxTotal = Math.round((cur.normal_sum - cur.claw_sum) * taxFactor(cur.tax_type, CONFIG));
+  let h = "<h2>업체조회</h2>" +
+    '<div class="row"><label>업체</label><select id="vp" class="in">' + partners.map(p => '<option' + (p === S.sel.partner ? " selected" : "") + ">" + esc(p) + "</option>").join("") + '</select>' +
+    '<label>정산일</label><select id="vd" class="in">' + mine.map(r => '<option value="' + r.settle_date + '"' + (r.settle_date === S.sel.date ? " selected" : "") + ">" + r.settle_date + "</option>").join("") + "</select>" +
+    (can.manage() ? '<button class="btn small danger" data-act="delstmt" data-id="' + cur.id + '">이 정산서 삭제</button>' : "") + "</div>" +
+    '<div class="kpis">' + kp("이번 환수금", won(cur.claw_sum), cur.line_count + "건 환수") + kp("일반 정산금 (상계 재원)", won(cur.normal_sum), "같은 정산서의 일반 건 합계") +
+    kp("상계 후 이월잔액", won(cur.carry), cur.carry ? "업체에 청구·차감할 금액" : "상계로 전액 정리됨") + kp("처리 완료 (차감+입금)", won(handled), "차감 " + fmt(cur.ded) + " · 입금 " + fmt(cur.pay)) +
+    kp("이 업체 누적 미해결", won(total), mine.filter(r => r.unresolved > 0).length + "개 정산서") + "</div>" +
+    '<div class="banner">' + esc(cur.partner) + " (" + esc(cur.tax_type) + ") · " + cur.settle_date + " 정산 · 상태: " + badge(cur.status) + " · 정산서 합계(세금 반영) " + won(taxTotal) + "</div>";
+  h += "<h3>① 이번 정산 환수 건</h3>";
+  h += '<div class="tw"><table><thead><tr><th>고객</th><th>상품</th><th>개통일</th><th>해지일</th><th>환수율</th><th>환수금액</th><th>정산 비고</th></tr></thead><tbody>';
+  cur.lines.forEach(l => { h += "<tr><td><b>" + esc(l.customer_mask) + '</b></td><td class="l">' + esc(l.product) + "</td><td>" + esc(l.open_date || "") + "</td><td>" + (l.term_date ? esc(l.term_date) : '<span class="warn">비고확인</span>') + "</td><td>" + (l.rate_pct == null ? '<span class="warn">비고확인</span>' : l.rate_pct + "%") + '</td><td class="n"><b style="color:var(--red)">' + fmt(l.amount) + '</b></td><td class="l" style="font-size:12px">' + esc(l.note) + "</td></tr>"; });
+  h += '<tr class="total"><td colspan="5" style="text-align:right">환수금 합계</td><td class="n">' + fmt(cur.lines.reduce((t, l) => t + Number(l.amount), 0)) + "</td><td></td></tr></tbody></table></div>";
+  h += "<h3>② 이 업체의 환수 이력 (최근 정산일순)</h3>";
+  h += '<div class="tw"><table><thead><tr><th>정산일</th><th>환수건수</th><th>환수금</th><th>일반정산금</th><th>이월잔액</th><th>차감 반영</th><th>입금 확인</th><th>미해결 잔액</th><th>상태</th><th>경과일</th></tr></thead><tbody>';
+  mine.forEach(r => { h += '<tr class="click' + (r.settle_date === S.sel.date ? " sel" : "") + '" data-act="open" data-p="' + esc(r.partner) + '" data-d="' + r.settle_date + '"><td>' + r.settle_date + "</td><td>" + r.line_count + '건</td><td class="n">' + mny(r.claw_sum) + '</td><td class="n">' + mny(r.normal_sum) + '</td><td class="n">' + mny(r.carry) + '</td><td class="n">' + mny(r.ded) + '</td><td class="n">' + mny(r.pay) + '</td><td class="n"><b>' + mny(r.unresolved) + "</b></td><td>" + badge(r.status) + "</td><td>" + (r.age == null ? "" : r.age + "일") + "</td></tr>"; });
+  h += "</tbody></table></div>";
+  const acts = S.actions.filter(a => a.partner === S.sel.partner).sort((a, b) => (a.action_date < b.action_date ? 1 : a.action_date > b.action_date ? -1 : b.id - a.id));
+  h += "<h3>③ 차감·입금 처리 기록 (이 업체)</h3>" + actionsTable(acts, false);
+  if (can.action()){
+    h += '<div class="card" style="margin-top:12px"><b>처리 기록 추가</b> <span class="hint">· ' + S.sel.date + " 정산 · 남은 금액 " + won(cur.unresolved) + '</span><div class="grid2" style="margin-top:8px">' +
+      '<div><label>처리 구분</label><select id="ak" class="in"><option>' + KIND_DED + "</option><option>" + KIND_PAY + "</option></select></div>" +
+      '<div><label>금액(원)</label><input type="number" id="aa" class="in" min="1" placeholder="0"></div>' +
+      '<div><label>처리일</label><input type="date" id="ad" class="in" value="' + todayISO() + '"></div>' +
+      '<div><label>확인 부서</label><select id="adp" class="in">' + CONFIG.DEPTS.map(d => "<option" + (S.member && S.member.dept === d ? " selected" : "") + ">" + esc(d) + "</option>").join("") + "</select></div>" +
+      '<div style="grid-column:span 2"><label>메모</label><input type="text" id="am" class="in" placeholder="예: 10/16 입금 확인"></div></div>' +
+      '<div class="row" style="margin-top:10px"><button class="btn" data-act="rest">남은 금액 전액 입력</button><button class="btn primary" data-act="addaction">기록 추가</button></div></div>';
+  }
+  return h;
+}
+function actionsTable(acts, showPartner){
+  if (!acts.length) return '<div class="tw"><div class="empty">처리 기록이 없습니다.</div></div>';
+  let h = '<div class="tw"><table><thead><tr><th>처리일</th>' + (showPartner ? "<th>업체</th>" : "") + "<th>환수발생일</th><th>구분</th><th>금액</th><th>확인 부서</th><th>메모</th><th>입력자</th><th></th></tr></thead><tbody>";
+  acts.forEach(a => {
+    const mine = S.user && a.created_by === S.user.email;
+    h += "<tr><td>" + a.action_date + "</td>" + (showPartner ? '<td class="l"><b>' + esc(a.partner) + "</b></td>" : "") + "<td>" + a.settle_date + "</td><td>" + esc(a.kind) + '</td><td class="n">' + fmt(a.amount) + "</td><td>" + esc(a.dept || "") + '</td><td class="l">' + esc(a.memo || "") + '</td><td style="font-size:12px;color:var(--muted)">' + esc(a.created_by || "") + "</td><td>" +
+      (S.role === "admin" || (S.role === "editor" && mine) ? '<button class="btn small danger" data-act="delaction" data-id="' + a.id + '">삭제</button>' : "") + "</td></tr>";
+  });
+  return h + "</tbody></table></div>";
+}
+
+/* ---------- 처리기록 ---------- */
+function renderLog(){
+  const partners = Array.from(new Set(S.actions.map(a => a.partner))).sort();
+  let acts = S.actions.filter(a => (!S.f.lp || a.partner === S.f.lp) && (!S.f.lk || a.kind === S.f.lk));
+  acts.sort((a, b) => (a.action_date < b.action_date ? 1 : a.action_date > b.action_date ? -1 : b.id - a.id));
+  return "<h2>처리기록</h2>" +
+    '<div class="row"><select id="lp"><option value="">업체 전체</option>' + partners.map(p => "<option" + (S.f.lp === p ? " selected" : "") + ">" + esc(p) + "</option>").join("") + '</select><select id="lk"><option value="">구분 전체</option><option' + (S.f.lk === KIND_DED ? " selected" : "") + ">" + KIND_DED + "</option><option" + (S.f.lk === KIND_PAY ? " selected" : "") + ">" + KIND_PAY + "</option></select></div>" +
+    actionsTable(acts, true) + '<p class="hint">기록 추가는 업체조회 화면 아래에서 합니다. 총 ' + acts.length + "건</p>";
+}
+
+/* ---------- 정산서 등록 ---------- */
+function renderUpload(){
+  if (!can.upload()) return '<h2>정산서 등록</h2><div class="tw"><div class="empty">등록 권한이 없습니다.</div></div>';
+  let h = "<h2>정산서 등록</h2>" +
+    '<div class="drop" id="drop">정산내역서 엑셀 파일(.xlsx)을 여기에 끌어다 놓거나 클릭해서 선택하세요<br><span class="hint">여러 파일을 한 번에 선택할 수 있습니다</span><input type="file" id="file" multiple accept=".xlsx,.xls" style="display:none"></div>' +
+    '<p class="hint">파일은 이 브라우저 안에서만 읽고 서버로 올리지 않습니다. 고객명·회선번호는 저장되지 않고, 환수 건에는 마스킹한 이름(예: 김○○), 상품, 개통일, 해지일, 환수율, 환수금액, 비고만 저장됩니다. 일반 정산 건은 합계만 저장됩니다.</p>';
+  S.staged.forEach((f, fi) => {
+    h += '<div class="card"><b>' + esc(f.name) + "</b>";
+    if (f.error){ h += '<p class="err">' + esc(f.error) + "</p></div>"; return; }
+    f.groups.forEach((g, gi) => {
+      const ex = S.rows.find(r => r.partner === g.partner && r.settle_date === g.settleDate);
+      const carry = Math.max(0, g.clawSum - g.normalSum);
+      h += '<div style="border-top:1px solid var(--line);margin-top:10px;padding-top:10px"><div class="row"><b style="font-size:15px">' + esc(g.partner) + "</b> · " + g.settleDate + " 정산 " +
+        '<label>세무유형</label><select class="in" data-g="tax" data-fi="' + fi + '" data-gi="' + gi + '"><option value="">선택</option>' + CONFIG.TAX_TYPES.map(t => "<option" + (g.taxType === t ? " selected" : "") + ">" + t + "</option>").join("") + "</select></div>" +
+        '<div class="row" style="gap:18px"><span>일반 ' + g.normalCount + "건 합계 <b>" + won(g.normalSum) + "</b></span><span>환수 " + g.lines.length + "건 합계 <b style='color:var(--red)'>" + won(g.clawSum) + "</b></span><span>상계 후 이월잔액 <b>" + won(carry) + "</b></span></div>";
+      if (ex) h += '<div class="row"><span class="badge b-amber">이미 등록된 정산서</span><label><input type="checkbox" data-g="ow" data-fi="' + fi + '" data-gi="' + gi + '"' + (g.overwrite ? " checked" : "") + "> 덮어쓰기 (처리기록은 그대로 유지됩니다)</label></div>";
+      if (!g.lines.length){ h += '<p class="hint">환수 건이 없는 정산서라 저장하지 않습니다.</p></div>'; return; }
+      g.warnings.forEach(w => { h += '<div class="warn">⚠ ' + esc(w) + "</div>"; });
+      h += '<div class="tw" style="margin-top:8px"><table><thead><tr><th>번호</th><th>고객</th><th>상품</th><th>개통일</th><th>해지일</th><th>환수율(%)</th><th>환수금액</th></tr></thead><tbody>';
+      g.lines.forEach((l, li) => { h += "<tr><td>" + (l.src_no == null ? "" : l.src_no) + "</td><td>" + esc(l.customer_mask) + '</td><td class="l">' + esc(l.product) + "</td><td>" + esc(l.open_date) + '</td><td><input type="date" class="in" data-g="term" data-fi="' + fi + '" data-gi="' + gi + '" data-li="' + li + '" value="' + esc(l.term_date) + '"></td><td><input type="number" class="in" style="width:80px" min="0" max="100" data-g="rate" data-fi="' + fi + '" data-gi="' + gi + '" data-li="' + li + '" value="' + (l.rate_pct == null ? "" : l.rate_pct) + '"></td><td class="n">' + fmt(l.amount) + "</td></tr>"; });
+      h += "</tbody></table></div></div>";
+    });
+    h += "</div>";
+  });
+  const savable = S.staged.some(f => f.groups && f.groups.some(g => g.lines.length));
+  if (savable) h += '<div class="row"><button class="btn primary" data-act="savestaged">저장하기</button><button class="btn" data-act="clearstaged">취소(화면 비우기)</button></div>';
+  return h;
+}
+function bindDrop(){
+  const d = $("#drop"), f = $("#file"); if (!d || !f) return;
+  d.onclick = () => f.click();
+  f.onchange = () => handleFiles(Array.from(f.files));
+  d.ondragover = e => { e.preventDefault(); d.classList.add("over"); };
+  d.ondragleave = () => d.classList.remove("over");
+  d.ondrop = e => { e.preventDefault(); d.classList.remove("over"); handleFiles(Array.from(e.dataTransfer.files)); };
+}
+async function handleFiles(files){
+  if (!window.XLSX){ toast("엑셀 라이브러리를 불러오지 못했습니다. 인터넷 연결을 확인하세요.", true); return; }
+  for (const file of files){
+    const entry = { name: file.name };
+    try {
+      const buf = await file.arrayBuffer();
+      const wb = XLSX.read(buf, { type: "array" });
+      const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1, raw: true, defval: null });
+      entry.groups = extractFromRows(rows, file.name).map(g => Object.assign(g, { overwrite: false }));
+    } catch (e) { entry.error = e.message; }
+    S.staged.push(entry);
+  }
+  renderTab();
+}
+async function saveStaged(){
+  const todo = [];
+  for (const f of S.staged) for (const g of (f.groups || [])) if (g.lines.length) todo.push(g);
+  for (const g of todo){
+    if (!g.taxType){ toast(g.partner + ": 세무유형을 선택하세요.", true); return; }
+    const ex = S.rows.find(r => r.partner === g.partner && r.settle_date === g.settleDate);
+    if (ex && !g.overwrite){ toast(g.partner + " " + g.settleDate + ": 이미 등록되어 있습니다. '덮어쓰기'를 체크하거나 취소하세요.", true); return; }
+  }
+  let ok = 0;
+  for (const g of todo){
+    const stmt = { partner: g.partner, settle_date: g.settleDate, tax_type: g.taxType, normal_sum: g.normalSum, claw_sum: g.lines.reduce((t, l) => t + l.amount, 0), line_count: g.lines.length };
+    const lines = g.lines.map(l => ({ src_no: l.src_no, customer_mask: l.customer_mask, product: l.product, open_date: l.open_date || null, term_date: l.term_date || null, rate_pct: l.rate_pct, amount: l.amount, note: l.note }));
+    try { await API.saveStatement(stmt, lines, g.overwrite); ok++; } catch (e) { toast(g.partner + " 저장 실패: " + e.message, true); break; }
+  }
+  if (ok === todo.length){ S.staged = []; toast(ok + "개 정산서를 저장했습니다. 파일 내용은 화면에서 지웠습니다."); }
+  await reload(); renderTab();
+}
+
+/* ---------- 관리 ---------- */
+function renderAdmin(){
+  if (!can.manage()) return '<h2>관리</h2><div class="tw"><div class="empty">권한이 없습니다.</div></div>';
+  const years = Array.from(new Set(S.rows.map(r => r.settle_date.slice(0, 4)))).sort().reverse();
+  let h = "<h2>관리</h2><h3>엑셀로 내려받기 (보관용)</h3>" +
+    '<div class="row"><select id="xy"><option value="">전체 기간</option>' + years.map(y => "<option>" + y + "</option>").join("") + '</select><button class="btn primary" data-act="export">엑셀 파일 만들기</button></div>' +
+    '<p class="hint">정산서 현황 · 환수 건 상세 · 처리기록 3개 시트로 저장됩니다. 연말에 내려받아 보관하세요.</p>' +
+    "<h3>사용자</h3>";
+  h += '<div class="tw"><table><thead><tr><th>이메일</th><th>이름</th><th>부서</th><th>권한</th><th></th></tr></thead><tbody>' +
+    S.members.map(m => '<tr><td class="l">' + esc(m.email) + "</td><td>" + esc(m.name || "") + "</td><td>" + esc(m.dept || "") + "</td><td>" + ({ admin: "관리자", editor: "처리 담당", viewer: "열람" }[m.role] || esc(m.role)) + '</td><td><button class="btn small danger" data-act="delmember" data-email="' + esc(m.email) + '">삭제</button></td></tr>').join("") + "</tbody></table></div>";
+  h += '<div class="card" style="margin-top:12px"><b>사용자 추가</b><div class="grid2" style="margin-top:8px"><div><label>이메일</label><input type="email" id="me" class="in"></div><div><label>이름</label><input type="text" id="mn" class="in"></div>' +
+    '<div><label>부서</label><select id="md" class="in">' + CONFIG.DEPTS.map(d => "<option>" + esc(d) + "</option>").join("") + '</select></div><div><label>권한</label><select id="mr" class="in"><option value="viewer">열람</option><option value="editor">처리 담당 (처리기록 입력)</option><option value="admin">관리자 (등록·삭제·사용자 관리)</option></select></div></div>' +
+    '<div class="row" style="margin-top:10px"><button class="btn primary" data-act="addmember">추가</button></div><p class="hint">로그인 방식(구글/이메일 코드)과 관계없이 여기 등록된 이메일만 접근할 수 있습니다.</p></div>';
+  return h;
+}
+function exportXlsx(){
+  if (!window.XLSX){ toast("엑셀 라이브러리를 불러오지 못했습니다.", true); return; }
+  const y = ($("#xy") || {}).value || "";
+  const rows = S.rows.filter(r => !y || r.settle_date.startsWith(y));
+  const keys = new Set(rows.map(r => r.partner + "|" + r.settle_date));
+  const sum = rows.map(r => ({ 정산일: r.settle_date, 업체: r.partner, 세무유형: r.tax_type, 환수건수: r.line_count, 환수금: r.claw_sum, 일반정산금: r.normal_sum, 이월잔액: r.carry, 차감반영: r.ded, 입금확인: r.pay, 미해결잔액: r.unresolved, 상태: r.status }));
+  const det = []; rows.forEach(r => r.lines.forEach(l => det.push({ 정산일: r.settle_date, 업체: r.partner, 번호: l.src_no, 고객: l.customer_mask, 상품: l.product, 개통일: l.open_date, 해지일: l.term_date, 환수율: l.rate_pct, 환수금액: l.amount, 비고: l.note })));
+  const act = S.actions.filter(a => keys.has(a.partner + "|" + a.settle_date)).map(a => ({ 처리일: a.action_date, 업체: a.partner, 환수발생일: a.settle_date, 구분: a.kind, 금액: a.amount, 확인부서: a.dept, 메모: a.memo, 입력자: a.created_by }));
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(sum), "정산서현황");
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(det), "환수건상세");
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(act), "처리기록");
+  XLSX.writeFile(wb, "환수관리_" + (y || "전체") + "_" + todayISO() + ".xlsx");
+}
+
+/* ---------- 이벤트 ---------- */
+function openDetail(p, d){ S.sel = { partner: p, date: d }; S.tab = "view"; renderTab(); window.scrollTo(0, 0); }
+async function onClick(e){
+  const th = e.target.closest("[data-sort]");
+  if (th){ const k = th.dataset.sort; S.sort = { key: k, dir: S.sort.key === k ? -S.sort.dir : 1 }; $("#ovTable").innerHTML = ""; renderTab(); return; }
+  const tb = e.target.closest("[data-tab]");
+  if (tb){ S.tab = tb.dataset.tab; renderTab(); return; }
+  const b = e.target.closest("[data-act]"); if (!b) return;
+  const act = b.dataset.act;
+  try {
+    if (act === "open") openDetail(b.dataset.p, b.dataset.d);
+    else if (act === "logout") { if (S.sb) await S.sb.auth.signOut(); }
+    else if (act === "rest") { const cur = S.rows.find(r => r.partner === S.sel.partner && r.settle_date === S.sel.date); $("#aa").value = cur ? cur.unresolved : ""; }
+    else if (act === "addaction") {
+      const amount = Number($("#aa").value), date = $("#ad").value;
+      if (!(amount > 0)) { toast("금액을 입력하세요.", true); return; }
+      if (!date) { toast("처리일을 입력하세요.", true); return; }
+      const cur = S.rows.find(r => r.partner === S.sel.partner && r.settle_date === S.sel.date);
+      if (cur && amount > cur.unresolved && !confirm("입력 금액(" + fmt(amount) + "원)이 남은 금액(" + fmt(cur.unresolved) + "원)보다 큽니다. 그래도 추가할까요?")) return;
+      await API.addAction({ partner: S.sel.partner, settle_date: S.sel.date, kind: $("#ak").value, amount, action_date: date, dept: $("#adp").value, memo: ($("#am").value || "").trim() });
+      await reload(); renderTab(); toast("처리 기록을 추가했습니다.");
+    }
+    else if (act === "delaction") { if (!confirm("이 처리 기록을 삭제할까요? 삭제하면 되돌릴 수 없습니다.")) return; await API.deleteAction(Number(b.dataset.id)); await reload(); renderTab(); toast("삭제했습니다."); }
+    else if (act === "delstmt") { if (!confirm("이 정산서(환수 건 포함)를 삭제할까요? 되돌릴 수 없습니다.")) return; await API.deleteStatement(Number(b.dataset.id)); await reload(); S.sel.date = ""; renderTab(); toast("정산서를 삭제했습니다."); }
+    else if (act === "savestaged") { b.disabled = true; await saveStaged(); }
+    else if (act === "clearstaged") { S.staged = []; renderTab(); }
+    else if (act === "export") exportXlsx();
+    else if (act === "addmember") {
+      const email = ($("#me").value || "").trim().toLowerCase(); if (!email || !email.includes("@")) { toast("이메일을 입력하세요.", true); return; }
+      await API.addMember({ email, name: ($("#mn").value || "").trim(), dept: $("#md").value, role: $("#mr").value }); await reload(); renderTab(); toast("사용자를 추가했습니다.");
+    }
+    else if (act === "delmember") {
+      if (!confirm(b.dataset.email + " 사용자를 삭제할까요?")) return;
+      await API.removeMember(b.dataset.email); await reload(); renderTab(); toast("삭제했습니다.");
+    }
+  } catch (err) { toast(err.message || String(err), true); }
+}
+function onChange(e){
+  const t = e.target;
+  if (t.id === "vp"){ S.sel.partner = t.value; S.sel.date = ""; renderTab(); }
+  else if (t.id === "vd"){ S.sel.date = t.value; renderTab(); }
+  else if (t.id === "fst"){ S.f.status = t.value; $("#ovTable").innerHTML = overviewTable(); }
+  else if (t.id === "fop"){ S.f.open = t.checked; $("#ovTable").innerHTML = overviewTable(); }
+  else if (t.id === "fag"){ S.aging = Math.max(1, Number(t.value) || 30); try { localStorage.setItem("agingDays", S.aging); } catch (e) {} renderTab(); }
+  else if (t.id === "lp"){ S.f.lp = t.value; renderTab(); }
+  else if (t.id === "lk"){ S.f.lk = t.value; renderTab(); }
+  else if (t.dataset && t.dataset.g){
+    const g = (S.staged[+t.dataset.fi] || {}).groups; if (!g) return; const grp = g[+t.dataset.gi];
+    if (t.dataset.g === "tax") grp.taxType = t.value;
+    else if (t.dataset.g === "ow") grp.overwrite = t.checked;
+    else if (t.dataset.g === "term") grp.lines[+t.dataset.li].term_date = t.value;
+    else if (t.dataset.g === "rate") grp.lines[+t.dataset.li].rate_pct = t.value === "" ? null : Number(t.value);
+  }
+  if (S.dirty && t.tagName !== "INPUT") { S.dirty = false; }
+}
+function onInput(e){
+  if (e.target.id === "fq"){ S.f.q = e.target.value; $("#ovTable").innerHTML = overviewTable(); }
+}
+document.addEventListener("focusout", () => { setTimeout(() => { if (S.dirty) safeRender(); }, 200); });
+
+boot();
+</script>
+</body>
+</html>
