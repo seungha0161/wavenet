@@ -397,9 +397,9 @@ function renderLogin(step, email, msg){
   if (CONFIG.LOGIN.google) h += '<button class="btn primary" data-act="google">Google 계정으로 로그인</button>';
   if (CONFIG.LOGIN.email){
     if (step === "code"){
-      h += '<p class="hint">' + esc(email) + ' 로 보낸 인증코드를 입력하세요.</p><input type="text" id="lcode" inputmode="numeric" autocomplete="one-time-code" placeholder="인증코드"><button class="btn primary" data-act="verify" data-email="' + esc(email) + '">확인</button>';
+      h += '<p class="hint">' + esc(email) + ' 로 메일을 보냈습니다. <b>메일 안의 링크를 누르면</b> 바로 로그인됩니다. 메일에 숫자 코드가 있으면 아래에 입력해도 됩니다. (가장 최근에 받은 메일을 사용하세요)</p><input type="text" id="lcode" inputmode="numeric" autocomplete="one-time-code" placeholder="숫자 코드 (링크를 눌렀다면 필요 없음)"><button class="btn primary" data-act="verify" data-email="' + esc(email) + '">확인</button>';
     } else {
-      h += '<input type="email" id="lemail" placeholder="회사 이메일" autocomplete="email" value="' + esc(email || "") + '"><button class="btn primary" data-act="sendcode">인증코드 받기</button>';
+      h += '<input type="email" id="lemail" placeholder="회사 이메일" autocomplete="email" value="' + esc(email || "") + '"><button class="btn primary" data-act="sendcode">로그인 메일 받기</button>';
     }
   }
   if (msg) h += '<p class="err">' + esc(msg) + '</p>';
@@ -418,7 +418,7 @@ function bindLogin(){
       } else if (act === "sendcode"){
         const email = ($("#lemail").value || "").trim().toLowerCase(); if (!email) return;
         b.disabled = true;
-        const { error } = await S.sb.auth.signInWithOtp({ email, options: { shouldCreateUser: CONFIG.ALLOW_NEW_AUTH_USERS } });
+        const { error } = await S.sb.auth.signInWithOtp({ email, options: { shouldCreateUser: CONFIG.ALLOW_NEW_AUTH_USERS, emailRedirectTo: location.origin + location.pathname } });
         if (error){ renderLogin("email", email, "코드를 보내지 못했습니다: " + error.message); return; }
         renderLogin("code", email);
       } else if (act === "verify"){
